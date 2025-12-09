@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>HeartBeats Results</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+
+      <style>
+         /* Fade + slide animation */
+         .fade-up {
+            opacity: 0;
+            transform: translateY(10px);
+            animation: fadeUp 0.6s ease-out forwards;
+         }
+         @keyframes fadeUp {
+            to {
+               opacity: 1;
+               transform: translateY(0);
+            }
+         }
+
+         /*Reflective*/
+         @keyframes pulseGlow {
+            0%,
+            100% {
+               box-shadow: 0 0 35px rgba(255, 0, 120, 0.4);
+            }
+            50% {
+               box-shadow: 0 0 70px rgba(255, 70, 200, 0.9);
+            }
+         }
+
+         .animate-pulse-glow {
+            animation: pulseGlow 4s ease-in-out infinite;
+         }
+
+         /* Reflective sweep animation */
+         .reflect {
+            position: absolute;
+            top: -50%;
+            left: -100%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+               115deg,
+               rgba(255, 255, 255, 0) 20%,
+               rgba(255, 255, 255, 0.15) 45%,
+               rgba(255, 255, 255, 0.35) 50%,
+               rgba(255, 255, 255, 0.15) 55%,
+               rgba(255, 255, 255, 0) 80%
+            );
+            transform: rotate(15deg);
+            animation: shineMove 6s ease-in-out infinite;
+         }
+
+         @keyframes shineMove {
+            0% {
+               transform: translateX(-150%) rotate(15deg);
+            }
+            50% {
+               transform: translateX(150%) rotate(15deg);
+            }
+            100% {
+               transform: translateX(150%) rotate(15deg);
+            }
+         }
+
+         /* Floating animation for stats */
+         @keyframes float {
+            0%, 100% {
+               transform: translateY(0px);
+            }
+            50% {
+               transform: translateY(-10px);
+            }
+         }
+
+         .float-animation {
+            animation: float 3s ease-in-out infinite;
+         }
+      </style>
+   </head>
+
+   <body class="bg-[#0c0c0e] text-white font-inter">
+      <!-- Background Glow -->
+      <div
+         class="absolute inset-0 bg-gradient-to-br from-pink-500/10 via-purple-600/5 to-transparent blur-3xl"
+      ></div>
+
+      <div
+         class="relative z-10 w-full min-h-screen flex flex-col lg:flex-row px-6 lg:px-12 py-8 gap-8"
+      >
+         <!-- LEFT SIDE – MOST SIMILAR + STATS -->
+         <div class="w-full lg:w-1/3 flex flex-col fade-up gap-6">
+            <h2 class="text-3xl font-semibold">Most Similar:</h2>
+
+            <div
+               class="w-full aspect-square p-6 rounded-3xl bg-gradient-to-br from-pink-500/40 via-purple-600/30 to-indigo-500/30 border border-pink-400/40 shadow-[0_0_50px_rgba(255,0,140,0.45)] backdrop-blur-xl flex flex-col justify-between animate-pulse-glow hover:scale-[1.02] transition-all duration-300 relative overflow-hidden"
+            >
+               <!-- reflective shine layer -->
+               <div
+                  class="absolute inset-0 pointer-events-none overflow-hidden"
+               >
+                  <div class="reflect"></div>
+               </div>
+               <!-- Track Title + Artist  -->
+               <div class="flex flex-col items-start relative z-10">
+                  <p class="text-3xl font-bold leading-snug mb-2">
+                     {{ results[0].track_title }}
+                  </p>
+                  <p class="text-gray-200 italic text-lg opacity-90 mb-auto">
+                     {{ results[0].artist_name }}
+                  </p>
+                  {% if results[0].album_title %}
+                  <p class="text-gray-300 text-sm mt-2 opacity-75">
+                     Album: {{ results[0].album_title }}
+                  </p>
+                  {% endif %}
+               </div>
+
+               <!-- Hearts Bottom Section -->
+               {% set percentage = results[0].distance * 100 %}
+               {% set full_hearts = (percentage // 10)|int %}
+               {% set remainder = percentage % 10 %}
+               {% set has_half_heart = remainder >= 5 %}
+               {% set empty_hearts = 10 - full_hearts - (1 if has_half_heart else 0) %}
+               
+               <div class="flex items-center gap-1 mt-auto relative z-10">
+                  {% for _ in range(full_hearts) %}
+                  <img
+                     src="/static/full.png"
+                     class="w-7 drop-shadow-[0_0_8px_rgba(255,0,120,0.8)]"
+                  />
+                  {% endfor %}
+                  
+                  {% if has_half_heart %}
+                  <img
+                     src="/static/half.png"
+                     class="w-7 drop-shadow-[0_0_8px_rgba(255,0,120,0.6)]"
+                  />
+                  {% endif %}
+                  
+                  {% for _ in range(empty_hearts) %}
+                  <img src="/static/empty.png" class="w-7 opacity-30" />
+                  {% endfor %}
+               </div>
+            </div>
+
+            <!-- STATS CARDS -->
+            <div class="grid grid-cols-2 gap-4 fade-up" style="animation-delay: 0.2s">
+               <div class="bg-white/5 backdrop-blur-xl p-5 rounded-2xl border border-white/10 text-center float-animation">
+                  <p class="text-4xl font-bold bg-gradient-to-r from-pink-400 to-red-400 bg-clip-text text-transparent">
+                     {{ results|length }}
+                  </p>
+                  <p class="text-gray-400 text-sm mt-1">Matches Found</p>
+               </div>
+               <div class="bg-white/5 backdrop-blur-xl p-5 rounded-2xl border border-white/10 text-center float-animation" style="animation-delay: 0.3s">
+                  <p class="text-4xl font-bold bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent">
+                     {{ "%.1f"|format(percentage) }}%
+                  </p>
+                  <p class="text-gray-400 text-sm mt-1">Match Score</p>
+               </div>
+            </div>
+
+            <!-- GENRE CARD (moved from top) -->
+            {% if genre %}
+            <div
+               class="fade-up bg-white/5 backdrop-blur-xl px-6 py-5 rounded-2xl border border-white/10 shadow-lg text-center"
+               style="animation-delay: 0.3s"
+            >
+               <p class="text-gray-300 text-sm uppercase tracking-wide mb-1">
+                  Detected Genre
+               </p>
+               <p
+                  class="text-2xl font-bold bg-gradient-to-r from-pink-400 to-red-400 bg-clip-text text-transparent"
+               >
+                  {{ genre }}
+               </p>
+            </div>
+            {% endif %}
+
+            <!-- ANALYZE ANOTHER BUTTON -->
+            <div class="fade-up mt-4" style="animation-delay: 0.4s">
+               <a
+                  href="/"
+                  class="w-full py-4 rounded-xl text-lg font-semibold text-white bg-gradient-to-r from-pink-500 to-red-500 shadow-lg hover:scale-105 hover:shadow-[0_0_25px_rgba(255,80,110,0.6)] transition-all duration-300 text-center block"
+               >
+                  Analyze Another Song
+               </a>
+            </div>
+
+            <!-- FUN FACT SECTION -->
+            <div class="fade-up bg-gradient-to-br from-purple-500/10 to-pink-500/10 backdrop-blur-xl p-5 rounded-2xl border border-purple-400/20" style="animation-delay: 0.5s">
+               <div class="flex items-start gap-3">
+                  <div class="text-3xl">💡</div>
+                  <div>
+                     <p class="text-sm font-semibold text-purple-300 mb-1">Did you know?</p>
+                     <p class="text-xs text-gray-300 leading-relaxed">
+                        Our AI analyzed over 74 audio features including tempo, rhythm patterns, and spectral characteristics to find your perfect matches!
+                     </p>
+                  </div>
+               </div>
+            </div>
+         </div>
+
+         <!-- RIGHT SIDE -->
+         <div class="w-full lg:w-2/3 flex flex-col fade-up">
+            <!-- HEADER BAR -->
+            <section class="flex justify-between items-center mb-6">
+               <div class="flex items-center gap-3">
+                  <img src="/static/full.png" class="h-12" />
+                  <p class="text-2xl font-semibold">HeartBeats</p>
+               </div>
+
+               <!-- SONG COUNTER -->
+               <div class="bg-white/5 backdrop-blur-xl px-5 py-3 rounded-xl border border-white/10">
+                  <p class="text-sm text-gray-400">
+                     Showing <span class="text-white font-semibold">{{ results|length }}</span> recommendations
+                  </p>
+               </div>
+            </section>
+
+            <!-- RECOMMENDATION LIST HEADER -->
+            <div class="flex justify-between items-center mb-4">
+               <h2 class="text-2xl font-semibold">Your Personalized Playlist</h2>
+               <div class="flex gap-2">
+                  <div class="flex items-center gap-1 bg-white/5 px-3 py-1 rounded-lg">
+                     <img src="/static/full.png" class="w-4" />
+                     <span class="text-xs text-gray-400">= Perfect Match</span>
+                  </div>
+               </div>
+            </div>
+
+            <!-- RECOMMENDATION GRID (SCROLLABLE) -->
+            <div
+               class="scroll-area max-h-[75vh] overflow-y-auto pr-4 [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.2)_transparent] pb-8"
+            >
+               <div
+                  class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-5"
+               >
+                  {% for row in results[1:] %}
+                  {% set row_percentage = row.distance * 100 %}
+                  {% set row_full_hearts = (row_percentage // 10)|int %}
+                  {% set row_remainder = row_percentage % 10 %}
+                  {% set row_has_half_heart = row_remainder >= 5 %}
+                  {% set row_empty_hearts = 10 - row_full_hearts - (1 if row_has_half_heart else 0) %}
+                  
+                  <div
+                     class="aspect-square rounded-2xl p-5 bg-gradient-to-br {{ gradients[loop.index0 % gradients|length] }} shadow-xl border border-white/10 hover:scale-105 hover:shadow-[0_0_40px_rgba(255,60,100,0.4)] transition duration-300 backdrop-blur-xl flex flex-col justify-between group cursor-pointer"
+                     style="animation-delay: {{ loop.index * 0.05 }}s"
+                  >
+                     <div>
+                        <p class="text-lg font-semibold mb-1 line-clamp-2 group-hover:text-pink-200 transition">
+                           {{ row.track_title }}
+                        </p>
+                        <p class="text-sm text-gray-200 italic mb-2 line-clamp-1">
+                           {{ row.artist_name }}
+                        </p>
+                        {% if row.album_title %}
+                        <p class="text-xs text-gray-300 opacity-70 line-clamp-1">
+                           {{ row.album_title }}
+                        </p>
+                        {% endif %}
+                     </div>
+
+                     <div class="mt-auto">
+                        <div class="flex items-center gap-1 mb-2">
+                           {% for _ in range(row_full_hearts) %}
+                           <img src="/static/full.png" class="w-5" />
+                           {% endfor %}
+                           
+                           {% if row_has_half_heart %}
+                           <img src="/static/half.png" class="w-5" />
+                           {% endif %}
+                           
+                           {% for _ in range(row_empty_hearts) %}
+                           <img src="/static/empty.png" class="w-5 opacity-40" />
+                           {% endfor %}
+                        </div>
+                        <p class="text-xs text-gray-300 opacity-60">
+                           {{ "%.1f"|format(row_percentage) }}% match
+                        </p>
+                     </div>
+                  </div>
+                  {% endfor %}
+               </div>
+            </div>
+         </div>
+      </div>
+   </body>
+</html>
