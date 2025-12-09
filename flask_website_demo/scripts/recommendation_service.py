@@ -3,12 +3,12 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Dict, Iterable, Sequence
+import os
 
 import pandas as pd
 
 from annoy_similarity.annoy_engine import SpotifyAnnoyEngine
 from scripts.extract_librosa_features import extract_features
-
 
 _FEATURE_LAYOUT: Sequence[tuple[str, int]] = (
     ("mfcc", 20),
@@ -45,21 +45,24 @@ class RecommendationService:
 
     def __init__(
         self,
-        model_dir: str = "annoy_similarity/model/",
+        model_dir: str | None = None,
         *,
         engine: SpotifyAnnoyEngine | None = None,
     ) -> None:
-        #self.engine = engine or SpotifyAnnoyEngine(model_dir=model_dir)
-        import os
+        # Absolute path to the src/ root
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        if model_dir is None:
+            model_dir = os.path.join(base_dir, "annoy_similarity", "model")
+        else:
+            model_dir = os.path.abspath(model_dir)
 
-        # Step 1a: Get the root src/ directory
-        BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        # Ensure engine uses absolute path
+        self.engine = engine or SpotifyAnnoyEngine(model_dir=model_dir)
 
-        # Step 1b: Absolute path to the model folder
-        MODEL_DIR = os.path.join(BASE_DIR, "annoy_similarity", "model")
-
-        # Step 1c: Create the engine using the absolute path
-        self.engine = engine or SpotifyAnnoyEngine(model_dir=MODEL_DIR)
+        # Make sure scaler.pkl path is correct inside engine
+        self.scaler_path = os.path.join(model_dir, "scaler.pkl")
+        if not os.path.exists(self.scaler_path):
+            raise FileNotFoundError(f"Scaler file not found at {self.scaler_path}")
 
     def recommend_from_audio(
         self,
