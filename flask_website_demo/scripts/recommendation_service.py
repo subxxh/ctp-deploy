@@ -49,7 +49,17 @@ class RecommendationService:
         *,
         engine: SpotifyAnnoyEngine | None = None,
     ) -> None:
-        self.engine = engine or SpotifyAnnoyEngine(model_dir=model_dir)
+        #self.engine = engine or SpotifyAnnoyEngine(model_dir=model_dir)
+        import os
+
+        # Step 1a: Get the root src/ directory
+        BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+        # Step 1b: Absolute path to the model folder
+        MODEL_DIR = os.path.join(BASE_DIR, "annoy_similarity", "model")
+
+        # Step 1c: Create the engine using the absolute path
+        self.engine = engine or SpotifyAnnoyEngine(model_dir=MODEL_DIR)
 
     def recommend_from_audio(
         self,
