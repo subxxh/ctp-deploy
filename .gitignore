@@ -1,4 +1,3 @@
-data/
 annoy_similarity/model/ann_index.ann
 annoy_similarity/model/features.npy
 annoy_similarity/model/scaler.pkl
